@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Random;
 
+import org.pircbotx.Channel;
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
 import org.pircbotx.UtilSSLSocketFactory;
@@ -22,15 +23,23 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 
   private FileOutputStream fos;
   private FileOutputStream suggestionStream;
+
   private File output;
+
   private PircBotX bot;
+
   private static String hostname;
   private static String channel;
+
   private String[] unchartedLyrics = new String[] {"Du", "Du", "Du", "Doo", "Du", "Dududoo", "du",
       "du", "du", "doo", "dududoo", "Du", "Du", "Dooooo", "do do do", "du do do", "doooooo",
       "duuuu dooooo", "dooooooooOOOOOOOOooooooo", "DuuuuuuuUUUUUUuuuuuuuuuu",
       "DoooooooouuuuuuuoooOOOUU", "DO DO DO DO DO DO DO do do", "du du du du du du du du", "DO DO",
       "(rumpa bum bum)", "bum bum bum"};
+  private String[] riotStrings = new String[] {"%NICK% waves their arms like a retarted cow",
+      "%NICK% slaps %RANDNICK% with a %SIZE% trout"};
+
+  private RiotControl control;
 
   private static void log(String message) {
     boolean isThePopeACatholic = true;
@@ -80,6 +89,8 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
   }
 
   public StoreBot() throws IOException {
+    control = new RiotControl();
+    control.startRiotControl();
     File suggestionFile =
         new File(
             "E:\\IRC Logs\\Bot Store\\Quakenet\\Project Awesome\\VitBot\\Suggestions\\Suggestions - "
@@ -119,7 +130,7 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
             + "\n";
     fos.write(message.getBytes());
     log("Written");
-    String responce = respondToMessage(event.getMessage(), event.getUser().getNick());
+    String responce = respondToMessage(event.getMessage(), event.getUser().getNick(), event);
     if (responce != null) {
       bot.sendIRC().message(channel, responce);
       log("Message sent");
@@ -137,7 +148,7 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 
   Random random = new Random();
 
-  public String respondToMessage(String message, String nick) {
+  public String respondToMessage(String message, String nick, GenericMessageEvent<PircBotX> event) {
     log("Message: " + message);
     log("Nick: " + nick);
     if (message.toLowerCase().contains("norway")) {
@@ -171,6 +182,42 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
     }
     if (message.toLowerCase().startsWith("!lyric")) {
       return nick + ": " + unchartedLyrics[random.nextInt(unchartedLyrics.length)];
+    }
+    if (message.toLowerCase().contains("!riot")) {
+      control.addRiotUser(nick);
+      int rioters = control.getRioters();
+      if (rioters == 1) {
+        bot.sendIRC().message(channel, rioters + " person is currently rioting");
+      } else {
+        bot.sendIRC().message(channel, rioters + " people are currently rioting");
+      }
+      String riotMessage = riotStrings[random.nextInt(riotStrings.length)];
+      riotMessage = riotMessage.replace("%NICK%", nick);
+      if (riotMessage.contains("%RANDNICK%")) {
+        for (Channel channel : event.getUser().getChannels()) {
+          if (channel.getName().contains(this.channel)) {
+            riotMessage =
+                riotMessage.replace(
+                    "%RANDNICK%",
+                    channel.getUsers().asList()
+                        .get(random.nextInt(channel.getUsers().asList().size())).getNick());
+          }
+        }
+      }
+      if (riotMessage.contains("%SIZE%")) {
+        switch (random.nextInt(3)) {
+          case 0:
+            riotMessage = riotMessage.replace("%SIZE%", "small");
+            break;
+          case 1:
+            riotMessage = riotMessage.replace("%SIZE%", "medium");
+            break;
+          case 2:
+            riotMessage = riotMessage.replace("%SIZE%", "large");
+            break;
+        }
+      }
+      return riotMessage;
     }
     return null;
   }
