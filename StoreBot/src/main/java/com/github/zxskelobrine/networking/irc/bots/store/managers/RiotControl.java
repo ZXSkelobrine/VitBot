@@ -1,9 +1,11 @@
-package com.github.zxskelobrine.networking.irc.bots.store;
+package com.github.zxskelobrine.networking.irc.bots.store.managers;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import com.github.zxskelobrine.networking.irc.bots.store.RiotUser;
 
 public class RiotControl {
 
