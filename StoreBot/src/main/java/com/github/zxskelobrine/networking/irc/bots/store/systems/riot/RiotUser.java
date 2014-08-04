@@ -1,4 +1,4 @@
-package com.github.zxskelobrine.networking.irc.bots.store;
+package com.github.zxskelobrine.networking.irc.bots.store.systems.riot;
 
 public class RiotUser {
 

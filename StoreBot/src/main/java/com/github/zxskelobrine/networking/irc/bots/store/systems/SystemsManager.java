@@ -1,4 +1,4 @@
-package com.github.zxskelobrine.networking.irc.bots.store.managers;
+package com.github.zxskelobrine.networking.irc.bots.store.systems;
 
 public class SystemsManager {
 
@@ -7,6 +7,8 @@ public class SystemsManager {
 	private static boolean lyricSystem = true;
 	private static boolean norwaySystem = true;
 	private static boolean mailSystem = true;
+	private static boolean karmaSystem = true;
+	private static boolean insultsSystem = true;
 
 	public static void enableIdiotSystem() {
 		idiotSystem = true;
@@ -26,6 +28,14 @@ public class SystemsManager {
 
 	public static void enableMailSystem() {
 		mailSystem = true;
+	}
+
+	public static void enableKarmaSystem() {
+		karmaSystem = true;
+	}
+
+	public static void enableInultsSystem() {
+		insultsSystem = true;
 	}
 
 	//----------------------\\
@@ -50,6 +60,14 @@ public class SystemsManager {
 		mailSystem = false;
 	}
 
+	public static void disableKarmaSystem() {
+		karmaSystem = false;
+	}
+
+	public static void disableInsultsSystem() {
+		insultsSystem = false;
+	}
+
 	//----------------------\\
 
 	public static boolean isIdiotSystemEnabled() {
@@ -70,6 +88,14 @@ public class SystemsManager {
 
 	public static boolean isMailSystemEnabled() {
 		return mailSystem;
+	}
+
+	public static boolean isKarmaSystemEnabled() {
+		return karmaSystem;
+	}
+
+	public static boolean isInsultsSystemEnabled() {
+		return insultsSystem;
 	}
 
 }

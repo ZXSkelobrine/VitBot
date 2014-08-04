@@ -1,4 +1,4 @@
-package com.github.zxskelobrine.networking.irc.bots.store.managers;
+package com.github.zxskelobrine.networking.irc.bots.store.systems.mail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.pircbotx.User;
 
-import com.github.zxskelobrine.networking.irc.bots.store.MailItem;
+import com.github.zxskelobrine.networking.irc.bots.store.managers.PersistentDataManager;
 
 public class MailManager {
 

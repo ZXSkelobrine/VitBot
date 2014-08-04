@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.zxskelobrine.networking.irc.bots.store.MailItem;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.karma.KarmaUser;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.mail.MailItem;
 
 public class PersistentDataManager {
 
@@ -31,7 +32,16 @@ public class PersistentDataManager {
 			currentOutput.write((mail[2] + "\n").getBytes());
 			currentOutput.flush();
 			currentOutput.close();
-			System.out.println("Written");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void storeKarma(KarmaUser user) {
+		try {
+			formFileOutputStream(user.getNick(), PersistentDataType.KARMA);
+			currentOutput.write(("" + user.getKarma()).getBytes());
+			currentOutput.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -72,11 +82,18 @@ public class PersistentDataManager {
 		return null;
 	}
 
+	public static List<KarmaUser> getKarmaUsers() {
+
+		return null;
+	}
+	
 	private static void formFileOutputStream(String nick, PersistentDataType dataType) throws IOException {
 		File file = null;
+		boolean append = true;
 		switch (dataType) {
 		case KARMA:
 			file = new File(PERSISTENT_KARMA_BASE + nick + ".txt");
+			append = false;
 			break;
 		case MAIL:
 			file = new File(PERSISTENT_MAIL_BASE + nick + ".txt");
@@ -87,7 +104,7 @@ public class PersistentDataManager {
 		if (!file.exists()) {
 			file.createNewFile();
 		}
-		currentOutput = new FileOutputStream(file, true);
+		currentOutput = new FileOutputStream(file, append);
 	}
 
 	private static void formBufferedInputStream(String nick, PersistentDataType dataType) throws FileNotFoundException {

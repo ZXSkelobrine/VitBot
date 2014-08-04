@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Random;
 
 import org.pircbotx.Channel;
@@ -21,16 +23,20 @@ import org.pircbotx.hooks.events.MessageEvent;
 import org.pircbotx.hooks.events.PrivateMessageEvent;
 import org.pircbotx.hooks.types.GenericMessageEvent;
 
-import com.github.zxskelobrine.networking.irc.bots.store.managers.MailManager;
+import com.github.zxskelobrine.networking.irc.bots.store.managers.ChatManager;
 import com.github.zxskelobrine.networking.irc.bots.store.managers.OperatorManager;
 import com.github.zxskelobrine.networking.irc.bots.store.managers.PersistentDataManager;
-import com.github.zxskelobrine.networking.irc.bots.store.managers.RiotControl;
-import com.github.zxskelobrine.networking.irc.bots.store.managers.SystemsManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.SystemsManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.karma.KarmaManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.karma.KarmaUser;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.mail.MailManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.riot.RiotControl;
 import com.google.common.collect.ImmutableList;
 
 public class StoreBot extends ListenerAdapter<PircBotX> {
 
 	private FileOutputStream fos;
+	@SuppressWarnings("unused")
 	private FileOutputStream suggestionStream;
 
 	private File output;
@@ -39,20 +45,19 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 
 	public static final String BOT_NAME = "VitBot";
 	private static final String BOT_IP_MASK = "VitBot";
+
 	private static String hostname;
 	public static String channelString;
+	public static final String startCharacter = "!";
 
-	private String[] unchartedLyrics = new String[] { "Du", "Du", "Du", "Doo", "Du", "Dududoo", "du", "du", "du", "doo", "dududoo", "Du", "Du", "Dooooo", "do do do", "du do do", "doooooo", "duuuu dooooo", "dooooooooOOOOOOOOooooooo", "DuuuuuuuUUUUUUuuuuuuuuuu", "DoooooooouuuuuuuoooOOOUU", "DO DO DO DO DO DO DO do do", "du du du du du du du du", "DO DO", "(rumpa bum bum)", "bum bum bum" };
-	private String[] riotStrings = new String[] { "%NICK% waves their arms like a retarted cow", "%NICK% slaps %RANDNICK% with a %SIZE% trout" };
-	//	private String[] insultStrings = new String[]{"%TO%'s mum is a pinecone"}
-
-	private RiotControl control;
+	public static List<String> insultStrings = new ArrayList<String>();//new String[] { "%TO%'s mum is a pinecone.", "Shut up %TO% you goat in a waistcoat.", "%TO% you are Adolf Titler.", "%TO% you are a pavian.", "%TO% isn`t that good, simply not human-sized enough", "%TO% is a dip-shit", "%TO% YOU LITTLE SHIT!", "" };
+	private String[] helpStrings = new String[] { "VitBot Help: ", StoreBot.startCharacter + "help: Prints this message", StoreBot.startCharacter + "mail <To> <Message>: Will send a message to <To> and will be delivered when they join or say a message.", StoreBot.startCharacter + "-- <User>: Subtracts one karma from <User>", StoreBot.startCharacter + "++ <User>: Adds one karma to <User>", StoreBot.startCharacter + "?? <User>: Shows the current karma of <User>", StoreBot.startCharacter + "lyric: Prints a stupid lyric", StoreBot.startCharacter + "riot: Shows how many people are rioting and adds you to the current riot." };
 
 	private Channel channel;
-	private ImmutableList<User> users;
+	//	private ImmutableList<User> users;
+	private ChatManager chatManager;
 
-	private Random random = new Random();
-	private String startCharacter = "~";
+	//	private Random random = new Random();
 
 	private static void log(String message) {
 		boolean isThePopeACatholic = true;
@@ -62,18 +67,16 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args, StoreBot sbot) throws IOException {
 		if (args.length >= 2) {
 			hostname = args[0];
 			log("Set hostnae");
 			channelString = args[1];
 			log("Set channel");
-			StoreBot sb = new StoreBot();
-			log("Storebot created");
 			log("Creating config");
 			Configuration<PircBotX> configuration;
 			try {
-				configuration = new Configuration.Builder().setName(BOT_NAME).setLogin(BOT_IP_MASK).setAutoNickChange(false).setCapEnabled(true).addCapHandler(new TLSCapHandler(new UtilSSLSocketFactory().trustAllCertificates(), true)).addListener(sb).setServerHostname(hostname)// irc.quakenet.org
+				configuration = new Configuration.Builder().setName(BOT_NAME).setLogin(BOT_IP_MASK).setAutoNickChange(false).setCapEnabled(true).addCapHandler(new TLSCapHandler(new UtilSSLSocketFactory().trustAllCertificates(), true)).addListener(sbot).setServerHostname(hostname)// irc.quakenet.org
 						.addAutoJoinChannel(channelString).buildConfiguration();//
 				log("Config created");
 				PircBotX botX = new PircBotX(configuration);
@@ -94,8 +97,6 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 	}
 
 	public StoreBot() throws IOException {
-		control = new RiotControl();
-		control.startRiotControl();
 		File suggestionFile = new File("E:\\IRC Logs\\Bot Store\\Quakenet\\Project Awesome\\VitBot\\Suggestions\\Suggestions - " + new SimpleDateFormat("dd-MM-yy - hh").format(Calendar.getInstance().getTime()) + ".txt");//TODO Change to sef gen path.
 		if (!suggestionFile.exists()) suggestionFile.createNewFile();
 		output = new File("E:\\IRC Logs\\Bot Store\\Quakenet\\Project Awesome\\VitBot\\" + new SimpleDateFormat("dd-MM-yy - hh").format(Calendar.getInstance().getTime()) + ".txt");//TODO Change to sef gen path.
@@ -105,10 +106,24 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 		log("Output file created if needed");
 		fos = new FileOutputStream(output, true);
 		log("Output stream set");
+		prepareInsultStrings();
+	}
+
+	private void prepareInsultStrings() {
+		insultStrings.add("%TO%'s mum is a pinecone.");
+		insultStrings.add("Shut up %TO% you goat in a waistcoat.");
+		insultStrings.add("%TO% you are Adolf Titler.");
+		insultStrings.add("%TO% you are a pavian.");
+		insultStrings.add("%TO% isn`t that good, simply not human-sized enough");
+		insultStrings.add("%TO% is a dip-shit");
+		insultStrings.add("%TO% YOU LITTLE SHIT!");
 	}
 
 	@Override
 	public void onJoin(JoinEvent<PircBotX> event) throws Exception {
+		if (chatManager == null) {
+			chatManager = new ChatManager(bot.getUserBot());
+		}
 		log("Channel joined");
 		String message = "[" + event.getTimestamp() + "] JOIN: " + event.getChannel().getName() + "\n";
 		log("Output made");
@@ -117,6 +132,9 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 		mailCheckEvent(event.getUser());
 		log("Mail event triggered");
 		super.onJoin(event);
+		if (event.getUser().getNick().equals("VitBot")) {
+			bot.sendIRC().message(channelString, "VitBot enabled");
+		}
 	}
 
 	public void mailCheckEvent(User user) {
@@ -130,15 +148,47 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 
 		String message = event.getMessage();
 		if (message.startsWith(startCharacter + "systems update")) {
-			systemsProcessor(event.getUser());
+			chatManager.systemsProcessor(event.getUser());
 		}
 		if (message.startsWith(startCharacter + "systems aio")) {
 			event.respond("Operator status: " + (OperatorManager.isOperator(event.getUser().getNick()) ? Colors.GREEN + "Enabled" : Colors.RED + "Disabled"));
 		}
 		if (OperatorManager.isOperator(event.getUser().getNick())) {
+			if (message.startsWith(startCharacter + "systems insult add")) {
+				String insult = message.split(startCharacter + "systems insult add")[1].substring(1);
+				insultStrings.add(insult);
+				event.respond("The insult '" + insult + "' has been added to the list. There are now " + insultStrings.size() + " insults.");
+			}
 			if (message.startsWith(startCharacter + "terminate")) {
 				disableManager();
-
+			}
+			if (message.startsWith(startCharacter + "systems karma reset")) {
+				String user = message.split("\\s+")[3];
+				if (KarmaManager.hasKarmaAccount(user)) {
+					KarmaManager.resetKarma(user);
+				} else {
+					KarmaUser kuser = new KarmaUser(user, 0);
+					KarmaManager.addKarmaUser(kuser);
+				}
+			}
+			if (message.startsWith(startCharacter + "systems karma set")) {
+				System.out.println("Done");
+				String[] split = message.split("\\s+");
+				String user = split[3];
+				String stringAmount = split[4];
+				int amount;
+				try {
+					amount = Integer.parseInt(stringAmount);
+					if (KarmaManager.hasKarmaAccount(user)) {
+						KarmaManager.setKarma(user, amount);
+					} else {
+						KarmaUser karmaUser = new KarmaUser(user, amount);
+						KarmaManager.addKarmaUser(karmaUser);
+					}
+					event.respond(user + "'s karma has been set to " + (amount > 0 ? Colors.GREEN : Colors.RED) + amount);
+				} catch (NumberFormatException e) {
+					event.respond("Use a valid number. Idiot.");
+				}
 			}
 			if (message.startsWith(startCharacter + "systems enable")) {
 				System.out.println("System: " + message.split("enable")[1].substring(1));
@@ -159,6 +209,14 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 				case "norway":
 					SystemsManager.enableNorwaySystem();
 					event.respond("Norway system has been " + Colors.GREEN + "enabled.");
+					break;
+				case "mail":
+					event.respond("Mail system has been " + Colors.GREEN + "enabled.");
+					SystemsManager.enableMailSystem();
+					break;
+				case "karma":
+					event.respond("Karma system has been " + Colors.GREEN + "enabled.");
+					SystemsManager.enableKarmaSystem();
 					break;
 				default:
 					event.respond("Unknows system.");
@@ -185,6 +243,14 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 					SystemsManager.disableNorwaySystem();
 					event.respond("Norway system has been " + Colors.RED + "disabled.");
 					break;
+				case "mail":
+					event.respond("Mail system has been " + Colors.RED + "disabled.");
+					SystemsManager.disableMailSystem();
+					break;
+				case "karma":
+					event.respond("Karma system has been " + Colors.RED + "disabled.");
+					SystemsManager.disableKarmaSystem();
+					break;
 				default:
 					event.respond("Unknows system.");
 					break;
@@ -201,15 +267,17 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 				event.respond("User: " + nick + " has been " + Colors.RED + "removed" + Colors.NORMAL + " to the operator list.");
 			}
 			if (message.toLowerCase().startsWith(startCharacter + "mail")) {
-				event.respond(mailProcessor(message, event.getUser().getNick()));
+				event.respond(chatManager.mailProcessor(message, event.getUser().getNick()));
 			}
 		}
 		super.onPrivateMessage(event);
 	}
 
-	private void disableManager() {
+	public void disableManager() {
 		bot.sendIRC().message(channelString, "VitBot disabled.");
+		bot.stopBotReconnect();
 		MailManager.saveAllMail();
+		KarmaManager.saveAllKarma();
 		System.exit(1);
 	}
 
@@ -229,12 +297,6 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 		super.onMessage(event);
 	}
 
-	@Override
-	public void onGenericMessage(GenericMessageEvent<PircBotX> event) throws Exception {
-		log("Generic");
-		super.onGenericMessage(event);
-	}
-
 	public String respondToMessage(String message, String nick, GenericMessageEvent<PircBotX> event) {
 		log("Message: " + message);
 		log("Nick: " + nick);
@@ -242,71 +304,60 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 			return "http://www.oljefondet.no/ NORWAY!";
 		}
 		if (message.toLowerCase().startsWith(startCharacter + "idiot")) {
-			return idiotProcessor(message);
+			return chatManager.idiotProcessor(message);
 		}
 		if (message.toLowerCase().startsWith(startCharacter + "vitbot")) {
-			return suggestionProcessor(nick, message);
+			//			return suggestionProcessor(nick, message);
 		}
 		if (message.toLowerCase().startsWith(startCharacter + "lyric")) {
-			return lyricProcessor(nick);
+			return chatManager.lyricProcessor(nick);
 		}
 		if (message.toLowerCase().contains(startCharacter + "riot")) {
 			return riotProcessor(nick);
 		}
 		if (message.toLowerCase().startsWith(startCharacter + "systems")) {
-			systemsProcessor(event.getUser());
+			chatManager.systemsProcessor(event.getUser());
 		}
 		if (message.toLowerCase().startsWith(startCharacter + "mail")) {
-			return mailProcessor(message, nick);
+			return chatManager.mailProcessor(message, nick);
 		}
-		return null;
-	}
-
-	private String mailProcessor(String message, String nick) {
-		if (SystemsManager.isMailSystemEnabled()) {
-			String[] spaceSplit = message.split("\\s+");
-			String to = spaceSplit[1];
-			StringBuilder sb = new StringBuilder();
-			for (int i = 2; i < spaceSplit.length; i++) {
-				sb.append(spaceSplit[i] + " ");
+		if (message.toLowerCase().startsWith(startCharacter + "++")) {
+			return chatManager.karmaProcessor(true, nick, message);
+		}
+		if (message.toLowerCase().startsWith(startCharacter + "--")) {
+			return chatManager.karmaProcessor(false, nick, message);
+		}
+		if (message.toLowerCase().startsWith(startCharacter + "??")) {
+			return chatManager.karmaLookupProcessor(message);
+		}
+		if (message.toLowerCase().startsWith(startCharacter + "in")) {
+			bot.sendIRC().message(channelString, chatManager.insultProcessor(message));
+		}
+		if(message.toLowerCase().startsWith(startCharacter + "terminate")){
+			if(OperatorManager.isOperator(nick)){
+				disableManager();
 			}
-			String mail = sb.toString();
-			mail = mail.substring(0, mail.length() - 1);
-			MailItem item = new MailItem(nick, mail, to);
-			MailManager.addMail(item);
-			return "Your message has been sent successfully " + nick;
+		}
+		if (message.toLowerCase().startsWith(startCharacter + "help")) {
+			for (String s : helpStrings) {
+				bot.sendIRC().message(nick, s);
+			}
 		}
 		return null;
 	}
 
-	private void systemsProcessor(User user) {
-		user.send().message("Current systems status: ");
-		user.send().message("Idiot: " + (SystemsManager.isIdiotSystemEnabled() ? Colors.GREEN + "Enabled" : Colors.RED + "Disabled"));
-		user.send().message("Riot: " + (SystemsManager.isRiotSystemEnabled() ? Colors.GREEN + "Enabled" : Colors.RED + "Disabled"));
-		user.send().message("Lyric: " + (SystemsManager.isLyricSystemEnabled() ? Colors.GREEN + "Enabled" : Colors.RED + "Disabled"));
-		user.send().message("Norway: " + (SystemsManager.isNorwaySystemEnabled() ? Colors.GREEN + "Enabled" : Colors.RED + "Disabled"));
-		user.send().message("Mail: " + (SystemsManager.isMailSystemEnabled() ? Colors.GREEN + "Enabled" : Colors.RED + "Disabled"));
-	}
-
-	private String lyricProcessor(String nick) {
-		if (SystemsManager.isLyricSystemEnabled()) {
-			return nick + ": " + unchartedLyrics[random.nextInt(unchartedLyrics.length)];
-		}
-		return null;
-	}
-
-	private String riotProcessor(String nick) {
+	public String riotProcessor(String nick) {
 		if (SystemsManager.isRiotSystemEnabled()) {
-			control.addRiotUser(nick);
-			int rioters = control.getRioters();
-			bot.sendIRC().message(channelString, rioters == 1 ? "1 person is currently rioting." : rioters + " peope are currently rioting.");
-			String riotMessage = riotStrings[random.nextInt(riotStrings.length)];
+			chatManager.control.addRiotUser(nick);
+			int rioters = chatManager.control.getRioters();
+			bot.sendIRC().message(channelString, rioters == 0 ? "1 person is currently rioting." : (rioters == 1 ? "1 person is currently rioting." : rioters + " peope are currently rioting."));
+			String riotMessage = chatManager.riotStrings[chatManager.random.nextInt(chatManager.riotStrings.length)];
 			riotMessage = riotMessage.replace("%NICK%", nick);
 			if (riotMessage.contains("%RANDNICK%")) {
-				riotMessage = riotMessage.replace("%RANDNICK%", users.get(random.nextInt(users.size())).getNick());
+				riotMessage = riotMessage.replace("%RANDNICK%", chatManager.users.get(chatManager.random.nextInt(chatManager.users.size())).getNick());
 			}
 			if (riotMessage.contains("%SIZE%")) {
-				switch (random.nextInt(3)) {
+				switch (chatManager.random.nextInt(3)) {
 				case 0:
 					riotMessage = riotMessage.replace("%SIZE%", "small");
 					break;
@@ -318,40 +369,8 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 					break;
 				}
 			}
-			System.out.println(riotMessage);
+			//			bot.sendIRC().message(channelString, riotMessage);
 			return riotMessage;
-		}
-		return null;
-	}
-
-	private String suggestionProcessor(String nick, String message) {
-		String[] spaceSplit = message.split("\\s+");
-		if (spaceSplit[1].equalsIgnoreCase("suggestion")) {
-			try {
-				suggestionStream.write((nick + ": " + message + "\n").getBytes());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return "Thank you " + nick + " for your suggestion.";
-	}
-
-	private String idiotProcessor(String message) {
-		if (SystemsManager.isIdiotSystemEnabled()) {
-			String[] spaceSplit = message.split("\\s+");
-			String username = spaceSplit[1];
-			String reason = "";
-			if (spaceSplit.length > 2) {
-				StringBuilder reasonBuilder = new StringBuilder();
-				for (int i = 2; i < spaceSplit.length; i++) {
-					reasonBuilder.append(spaceSplit[i] + " ");
-				}
-				reason = " because " + reasonBuilder.toString() + ".";
-			} else if (spaceSplit.length < 2) {
-				reason = ".";
-			}
-
-			return username + " you are an idiot" + reason;
 		}
 		return null;
 	}
@@ -365,7 +384,7 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 			}
 		}
 		if (updateUsers) {
-			users = channel.getUsers().asList();
+			//			users = channel.getUsers().asList();
 		}
 	}
 

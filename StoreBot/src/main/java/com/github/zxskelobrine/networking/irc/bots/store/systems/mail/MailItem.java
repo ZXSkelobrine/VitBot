@@ -1,15 +1,20 @@
-package com.github.zxskelobrine.networking.irc.bots.store;
+package com.github.zxskelobrine.networking.irc.bots.store.systems.mail;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class MailItem {
 
 	private String message;
 	private String sender;
 	private String recipient;
+	private String time;
 
 	public MailItem(String sender, String message, String recipient) {
 		this.sender = sender;
 		this.message = message;
 		this.recipient = recipient;
+		this.time = new SimpleDateFormat("dd-MM-yy - hh:mm").format(Calendar.getInstance().getTime());
 	}
 
 	public String[] generateMessage() {
