@@ -1,4 +1,4 @@
-package com.github.zxskelobrine.networking.irc.bots.store.managers;
+package com.github.zxskelobrine.networking.irc.bots.store.managers.internal;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -6,7 +6,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.pircbotx.User;
 
-import com.github.zxskelobrine.networking.irc.bots.store.managers.PersistentDataManager;
+import com.github.zxskelobrine.networking.irc.bots.store.managers.internal.PersistentDataManager;
 
 public class MailManager {
 
