@@ -9,7 +9,6 @@ import org.pircbotx.Colors;
 import org.pircbotx.PircBotX;
 import org.pircbotx.User;
 
-import com.github.zxskelobrine.networking.irc.bots.store.CooldownTimerTask.CooldownType;
 import com.github.zxskelobrine.networking.irc.bots.store.StoreBot;
 import com.github.zxskelobrine.networking.irc.bots.store.systems.SlapUser;
 import com.github.zxskelobrine.networking.irc.bots.store.systems.SystemsManager;
@@ -19,6 +18,7 @@ import com.github.zxskelobrine.networking.irc.bots.store.systems.mail.MailItem;
 import com.github.zxskelobrine.networking.irc.bots.store.systems.mail.MailManager;
 import com.github.zxskelobrine.networking.irc.bots.store.systems.riot.RiotControl;
 import com.github.zxskelobrine.networking.irc.bots.store.systems.slap.SlapManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.cooldown.CooldownTimerTask.CooldownType;
 
 public class ChatManager {
 
