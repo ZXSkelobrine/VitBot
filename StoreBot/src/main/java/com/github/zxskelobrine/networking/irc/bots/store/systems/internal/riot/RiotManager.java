@@ -1,4 +1,4 @@
-package com.github.zxskelobrine.networking.irc.bots.store.systems.riot;
+package com.github.zxskelobrine.networking.irc.bots.store.systems.internal.riot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class RiotControl {
+public class RiotManager {
 
 	private List<RiotUser> rioters;
 	private final int TOTAL_RIOT_TIME = 180000;

@@ -1,4 +1,4 @@
-package com.github.zxskelobrine.networking.irc.bots.store.systems.mail;
+package com.github.zxskelobrine.networking.irc.bots.store.systems.internal.mail;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -14,11 +14,11 @@ public class MailItem {
 		this.sender = sender;
 		this.message = message;
 		this.recipient = recipient;
-		this.time = new SimpleDateFormat("dd-MM-yy - hh:mm").format(Calendar.getInstance().getTime());
+		this.time = new SimpleDateFormat("dd-MM-yy - hh:mm (a)").format(Calendar.getInstance().getTime());
 	}
 
 	public String[] generateMessage() {
-		return new String[] { "Dear " + recipient, "\t" + message, "From " + sender };
+		return new String[] { "Dear " + recipient, "\t" + message, "From " + sender, "Sent at: " + time };
 	}
 
 	public String getRecipient() {

@@ -7,14 +7,18 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
@@ -22,13 +26,8 @@ import javax.swing.border.EmptyBorder;
 import com.github.zxskelobrine.networking.irc.bots.store.StoreBot;
 import com.github.zxskelobrine.networking.irc.bots.store.managers.external.TrayManager;
 import com.github.zxskelobrine.networking.irc.bots.store.managers.internal.PersistentDataManager;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.SystemsManager;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.karma.KarmaManager;
-
-import javax.swing.JTextField;
-
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.SystemsManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.karma.KarmaManager;
 
 public class StatusWindow extends JFrame {
 
@@ -53,6 +52,7 @@ public class StatusWindow extends JFrame {
 	private JCheckBox chckbxConnected;
 	private JTextField textField;
 	private JButton btnSend;
+	private JCheckBox chckbxSwears;
 
 	/**
 	 * Launch the application.
@@ -95,25 +95,27 @@ public class StatusWindow extends JFrame {
 	public StatusWindow() {
 		try {
 			UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+			setIconImage(ImageIO.read(TrayManager.class.getResource(TrayManager.iconPath)));
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException | IOException e) {
 			e.printStackTrace();
 		}
 		setTitle("VitBot - Status");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 242, 329);
+		setBounds(100, 100, 329, 358);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.columnWidths = new int[] { 0, 0, 0, 0 };
-		gbl_contentPane.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-		gbl_contentPane.columnWeights = new double[] { 0.0, 0.0, 1.0, Double.MIN_VALUE };
-		gbl_contentPane.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		gbl_contentPane.columnWidths = new int[] { 58, 52, 16, 149, 0 };
+		gbl_contentPane.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		gbl_contentPane.columnWeights = new double[] { 7.0, 0.0, 0.0, 1.0, Double.MIN_VALUE };
+		gbl_contentPane.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
 		contentPane.setLayout(gbl_contentPane);
 
 		lblEnabledServices = new JLabel("Enabled Services");
 		lblEnabledServices.setFont(new Font("Tahoma", Font.BOLD, 11));
 		GridBagConstraints gbc_lblEnabledServices = new GridBagConstraints();
+		gbc_lblEnabledServices.gridwidth = 2;
 		gbc_lblEnabledServices.insets = new Insets(0, 0, 5, 5);
 		gbc_lblEnabledServices.gridx = 0;
 		gbc_lblEnabledServices.gridy = 0;
@@ -129,6 +131,7 @@ public class StatusWindow extends JFrame {
 		chckbxIdiotSystem = new JCheckBox("Idiot System");
 		chckbxIdiotSystem.setEnabled(false);
 		GridBagConstraints gbc_chckbxIdiotSystem = new GridBagConstraints();
+		gbc_chckbxIdiotSystem.gridwidth = 2;
 		gbc_chckbxIdiotSystem.anchor = GridBagConstraints.WEST;
 		gbc_chckbxIdiotSystem.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxIdiotSystem.gridx = 0;
@@ -144,13 +147,14 @@ public class StatusWindow extends JFrame {
 		GridBagConstraints gbc_btnTerminate = new GridBagConstraints();
 		gbc_btnTerminate.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnTerminate.insets = new Insets(0, 0, 5, 0);
-		gbc_btnTerminate.gridx = 2;
+		gbc_btnTerminate.gridx = 3;
 		gbc_btnTerminate.gridy = 2;
 		contentPane.add(btnTerminate, gbc_btnTerminate);
 
 		chckbxRiotSystem = new JCheckBox("Riot System");
 		chckbxRiotSystem.setEnabled(false);
 		GridBagConstraints gbc_chckbxRiotSystem = new GridBagConstraints();
+		gbc_chckbxRiotSystem.gridwidth = 2;
 		gbc_chckbxRiotSystem.anchor = GridBagConstraints.WEST;
 		gbc_chckbxRiotSystem.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxRiotSystem.gridx = 0;
@@ -166,13 +170,14 @@ public class StatusWindow extends JFrame {
 		GridBagConstraints gbc_btnMaintain = new GridBagConstraints();
 		gbc_btnMaintain.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnMaintain.insets = new Insets(0, 0, 5, 0);
-		gbc_btnMaintain.gridx = 2;
+		gbc_btnMaintain.gridx = 3;
 		gbc_btnMaintain.gridy = 3;
 		contentPane.add(btnMaintain, gbc_btnMaintain);
 
 		chckbxLyricSystem = new JCheckBox("Lyric System");
 		chckbxLyricSystem.setEnabled(false);
 		GridBagConstraints gbc_chckbxLyricSystem = new GridBagConstraints();
+		gbc_chckbxLyricSystem.gridwidth = 2;
 		gbc_chckbxLyricSystem.anchor = GridBagConstraints.WEST;
 		gbc_chckbxLyricSystem.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxLyricSystem.gridx = 0;
@@ -183,13 +188,15 @@ public class StatusWindow extends JFrame {
 		chckbxConnected.setEnabled(false);
 		GridBagConstraints gbc_chckbxConnected = new GridBagConstraints();
 		gbc_chckbxConnected.insets = new Insets(0, 0, 5, 0);
-		gbc_chckbxConnected.gridx = 2;
+		gbc_chckbxConnected.gridx = 3;
 		gbc_chckbxConnected.gridy = 4;
 		contentPane.add(chckbxConnected, gbc_chckbxConnected);
 
 		chckbxNorwaySystem = new JCheckBox("Norway System");
 		chckbxNorwaySystem.setEnabled(false);
 		GridBagConstraints gbc_chckbxNorwaySystem = new GridBagConstraints();
+		gbc_chckbxNorwaySystem.anchor = GridBagConstraints.WEST;
+		gbc_chckbxNorwaySystem.gridwidth = 2;
 		gbc_chckbxNorwaySystem.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxNorwaySystem.gridx = 0;
 		gbc_chckbxNorwaySystem.gridy = 5;
@@ -209,7 +216,7 @@ public class StatusWindow extends JFrame {
 		gbc_textField.gridwidth = 2;
 		gbc_textField.insets = new Insets(0, 0, 5, 0);
 		gbc_textField.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textField.gridx = 1;
+		gbc_textField.gridx = 2;
 		gbc_textField.gridy = 5;
 		contentPane.add(textField, gbc_textField);
 		textField.setColumns(10);
@@ -217,6 +224,7 @@ public class StatusWindow extends JFrame {
 		chckbxMailSystem = new JCheckBox("Mail System");
 		chckbxMailSystem.setEnabled(false);
 		GridBagConstraints gbc_chckbxMailSystem = new GridBagConstraints();
+		gbc_chckbxMailSystem.gridwidth = 2;
 		gbc_chckbxMailSystem.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxMailSystem.anchor = GridBagConstraints.WEST;
 		gbc_chckbxMailSystem.gridx = 0;
@@ -226,20 +234,21 @@ public class StatusWindow extends JFrame {
 		btnSend = new JButton("Send");
 		btnSend.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				storeBot.sendMessageToChannel(textField.getText());
+				storeBot.sendRaw(textField.getText());
 				textField.setText("");
 			}
 		});
 		GridBagConstraints gbc_btnSend = new GridBagConstraints();
 		gbc_btnSend.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnSend.insets = new Insets(0, 0, 5, 0);
-		gbc_btnSend.gridx = 2;
+		gbc_btnSend.gridx = 3;
 		gbc_btnSend.gridy = 6;
 		contentPane.add(btnSend, gbc_btnSend);
 
 		chckbxKarmaSystem = new JCheckBox("Karma System");
 		chckbxKarmaSystem.setEnabled(false);
 		GridBagConstraints gbc_chckbxKarmaSystem = new GridBagConstraints();
+		gbc_chckbxKarmaSystem.gridwidth = 2;
 		gbc_chckbxKarmaSystem.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxKarmaSystem.anchor = GridBagConstraints.WEST;
 		gbc_chckbxKarmaSystem.gridx = 0;
@@ -249,28 +258,39 @@ public class StatusWindow extends JFrame {
 		chckbxInsultsSystem = new JCheckBox("Insults System");
 		chckbxInsultsSystem.setEnabled(false);
 		GridBagConstraints gbc_chckbxInsultsSystem = new GridBagConstraints();
+		gbc_chckbxInsultsSystem.gridwidth = 2;
 		gbc_chckbxInsultsSystem.anchor = GridBagConstraints.WEST;
 		gbc_chckbxInsultsSystem.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxInsultsSystem.gridx = 0;
 		gbc_chckbxInsultsSystem.gridy = 8;
 		contentPane.add(chckbxInsultsSystem, gbc_chckbxInsultsSystem);
 
+		chckbxSwears = new JCheckBox("Swears");
+		chckbxSwears.setEnabled(false);
+		GridBagConstraints gbc_chckbxSwears = new GridBagConstraints();
+		gbc_chckbxSwears.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxSwears.gridx = 1;
+		gbc_chckbxSwears.gridy = 9;
+		contentPane.add(chckbxSwears, gbc_chckbxSwears);
+
 		chckbxSlapSystem = new JCheckBox("Slap System");
 		chckbxSlapSystem.setEnabled(false);
 		GridBagConstraints gbc_chckbxSlapSystem = new GridBagConstraints();
+		gbc_chckbxSlapSystem.gridwidth = 2;
 		gbc_chckbxSlapSystem.anchor = GridBagConstraints.WEST;
 		gbc_chckbxSlapSystem.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxSlapSystem.gridx = 0;
-		gbc_chckbxSlapSystem.gridy = 9;
+		gbc_chckbxSlapSystem.gridy = 10;
 		contentPane.add(chckbxSlapSystem, gbc_chckbxSlapSystem);
 
 		chckbxPartySystem = new JCheckBox("Party System");
 		chckbxPartySystem.setEnabled(false);
 		GridBagConstraints gbc_chckbxPartySystem = new GridBagConstraints();
+		gbc_chckbxPartySystem.gridwidth = 2;
 		gbc_chckbxPartySystem.anchor = GridBagConstraints.WEST;
 		gbc_chckbxPartySystem.insets = new Insets(0, 0, 0, 5);
 		gbc_chckbxPartySystem.gridx = 0;
-		gbc_chckbxPartySystem.gridy = 10;
+		gbc_chckbxPartySystem.gridy = 11;
 		contentPane.add(chckbxPartySystem, gbc_chckbxPartySystem);
 		startUpdateThread();
 	}
@@ -280,7 +300,10 @@ public class StatusWindow extends JFrame {
 			@Override
 			public void run() {
 				while (running) {
-					if (storeBot != null) chckbxConnected.setSelected(storeBot.isConnected());
+					if (storeBot != null) {
+						chckbxConnected.setSelected(storeBot.isConnected());
+						chckbxSwears.setSelected(storeBot.useInsultSwears);
+					}
 					chckbxIdiotSystem.setSelected(SystemsManager.isIdiotSystemEnabled());
 					chckbxRiotSystem.setSelected(SystemsManager.isRiotSystemEnabled());
 					chckbxLyricSystem.setSelected(SystemsManager.isLyricSystemEnabled());

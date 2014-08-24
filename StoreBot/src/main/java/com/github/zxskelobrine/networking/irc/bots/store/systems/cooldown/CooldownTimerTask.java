@@ -3,6 +3,9 @@ package com.github.zxskelobrine.networking.irc.bots.store.systems.cooldown;
 import java.util.HashMap;
 import java.util.TimerTask;
 
+import com.github.zxskelobrine.networking.irc.bots.store.StoreBot;
+import com.github.zxskelobrine.networking.irc.bots.store.managers.internal.OperatorManager;
+
 public class CooldownTimerTask extends TimerTask {
 
 	public enum CooldownType {
@@ -15,6 +18,9 @@ public class CooldownTimerTask extends TimerTask {
 
 	public boolean hasCooldown(String nick, CooldownType type) {
 		HashMap<CooldownType, Long> map = cooldowns.get(nick);
+		if (StoreBot.enableOpOverride && OperatorManager.isOperator(nick)) {
+			return false;
+		}
 		if (map == null) {
 			return false;
 		}

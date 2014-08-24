@@ -9,9 +9,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.zxskelobrine.networking.irc.bots.store.systems.SystemsManager;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.karma.KarmaUser;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.mail.MailItem;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.SystemsManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.karma.KarmaUser;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.mail.MailItem;
 
 public class PersistentDataManager {
 

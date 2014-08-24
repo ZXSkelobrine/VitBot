@@ -1,4 +1,4 @@
-package com.github.zxskelobrine.networking.irc.bots.store.systems.karma;
+package com.github.zxskelobrine.networking.irc.bots.store.systems.internal.karma;
 
 import java.util.ArrayList;
 import java.util.List;

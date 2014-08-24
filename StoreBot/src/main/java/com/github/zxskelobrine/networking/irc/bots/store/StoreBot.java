@@ -26,10 +26,10 @@ import com.github.zxskelobrine.networking.irc.bots.store.managers.internal.ChatM
 import com.github.zxskelobrine.networking.irc.bots.store.managers.internal.CoolDownManager;
 import com.github.zxskelobrine.networking.irc.bots.store.managers.internal.OperatorManager;
 import com.github.zxskelobrine.networking.irc.bots.store.managers.internal.PersistentDataManager;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.SystemsManager;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.karma.KarmaManager;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.karma.KarmaUser;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.mail.MailManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.SystemsManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.karma.KarmaManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.karma.KarmaUser;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.mail.MailManager;
 
 public class StoreBot extends ListenerAdapter<PircBotX> {
 
@@ -52,6 +52,7 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 	 * This is the bots name.
 	 */
 	public static final String BOT_NAME = "VitBot";
+
 	/**
 	 * This is the ip mask that the bot uses:<br>
 	 * ~<b><code>BOT_IP_MASK</code></b>@0540ca1a.skybroadband.com
@@ -62,24 +63,39 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 	 * This is the server that the bot will be connecting to.
 	 */
 	private static String hostname;
+
 	/**
 	 * This is the channel name supplied (like the hostname) from the launch
 	 * arguments of the program.
 	 */
 	public static String channelString;
+
 	/**
 	 * This is the character that will start all commands that the bot will
 	 * register.
 	 */
 	public static final String startCharacter = "!";
 
+	/**
+	 * This list contains all of the insults that do not contain swears.
+	 */
 	public static List<String> insultStrings = new ArrayList<String>();
+
+	/**
+	 * This list contains all of the insults that do contain swears.
+	 */
+	public static List<String> swearInsultStrings = new ArrayList<String>();
+
+	/**
+	 * This array contains all the help mesages.
+	 */
 	private String[] helpStrings = new String[] { "VitBot Help: ", StoreBot.startCharacter + "help: Prints this message", StoreBot.startCharacter + "mail <To> <Message>: Will send a message to <To> and will be delivered when they join or say a message.", StoreBot.startCharacter + "-- <User>: Subtracts one karma from <User>", StoreBot.startCharacter + "++ <User>: Adds one karma to <User>", StoreBot.startCharacter + "?? <User>: Shows the current karma of <User>", StoreBot.startCharacter + "lyric: Prints a stupid lyric", StoreBot.startCharacter + "riot: Shows how many people are rioting and adds you to the current riot." };
 
 	/**
 	 * This is the channel that the bot is currently opperating on.
 	 */
 	public static Channel channel;
+
 	/**
 	 * This is the {@link ChatManager} that is uses to process most of the
 	 * messages.
@@ -93,6 +109,16 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 	static boolean isThePopeACatholic = true;
 
 	/**
+	 * This will control whether swears are used in the insults.
+	 */
+	public boolean useInsultSwears = false;
+
+	/**
+	 * This will control whether the is an operator cooldown override.
+	 */
+	public static boolean enableOpOverride = false;
+
+	/**
 	 * This method will print the given message to sdout if it is enabled.
 	 * 
 	 * @param message
@@ -100,6 +126,11 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 	private static void log(String message) {
 		if (isThePopeACatholic) {
 			System.out.println(message);
+		}
+	}
+
+	public static void main(String[] args) {
+		for (int i = 0; i < args.length; i++) {
 		}
 	}
 
@@ -122,11 +153,21 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 			log("Set channel");
 			isThePopeACatholic = pope;
 			log("Creating config");
+			Configuration.Builder<PircBotX> builder;
 			Configuration<PircBotX> configuration;
-			try {
-				configuration = new Configuration.Builder().setName(BOT_NAME).setLogin(BOT_IP_MASK).setAutoNickChange(false).setCapEnabled(true).addCapHandler(new TLSCapHandler(new UtilSSLSocketFactory().trustAllCertificates(), true)).addListener(sbot).setServerHostname(hostname)
-				// irc.quakenet.org
-						.addAutoJoinChannel(channelString).setServerPassword("08348P!uiXJbeCHQ@hQj").buildConfiguration();//
+			try {//08348P!uiXJbeCHQ@hQj
+				builder = new Configuration.Builder();
+				builder = builder.setName(BOT_NAME).setLogin(BOT_IP_MASK).setAutoNickChange(false).setCapEnabled(true).addCapHandler(new TLSCapHandler(new UtilSSLSocketFactory().trustAllCertificates(), true)).addListener(sbot).setServerHostname(hostname).addAutoJoinChannel(channelString).setServerPassword(args[2]).setServerPassword("08348P!uiXJbeCHQ@hQj");
+				for (int i = 2; i < args.length; i++) {
+					System.out.println("Added channel");
+					String[] split = args[i].split("\\|");
+					if (split.length == 1) {
+						builder = builder.addAutoJoinChannel(split[0]);
+					} else if (split.length == 2) {
+						builder = builder.addAutoJoinChannel(split[0], split[1]);
+					}
+				}
+				configuration = builder.buildConfiguration();
 				log("Config created");
 				PircBotX botX = new PircBotX(configuration);
 				log("Bot created");
@@ -174,8 +215,8 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 		insultStrings.add("%TO% you are Adolf Titler.");
 		insultStrings.add("%TO% you are a pavian.");
 		insultStrings.add("%TO% isn`t that good, simply not human-sized enough");
-		insultStrings.add("%TO% is a dip-shit");
-		insultStrings.add("%TO% YOU LITTLE SHIT!");
+		swearInsultStrings.add("%TO% is a dip-shit");
+		swearInsultStrings.add("%TO% YOU LITTLE SHIT!");
 	}
 
 	@Override
@@ -235,61 +276,105 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 		String message = event.getMessage();
 		String[] spaceSplit = message.split("\\s+");
 		if (spaceSplit[0].equals("!systems")) {
-			switch (spaceSplit[1]) {
-			case "update":
-				chatManager.systemsProcessor(event.getUser());
-				break;
-			case "aio":
-				event.respond("Operator status: " + (OperatorManager.isOperator(event.getUser().getNick()) ? Colors.GREEN + "Enabled" : Colors.RED + "Disabled"));
-				break;
-			default:
-				break;
-			}
-			if (OperatorManager.isOperator(event.getUser().getNick())) {
+			if (spaceSplit.length > 1) {
 				switch (spaceSplit[1]) {
-				case "insult":
-					if (spaceSplit[2].equals("add")) {
-						String insult = message.split(startCharacter + "systems insult add")[1].substring(1);
-						insultStrings.add(insult);
-						event.respond("The insult '" + insult + "' has been added to the list. There are now " + insultStrings.size() + " insults.");
+				case "opover":
+					if (spaceSplit.length > 2) {
+						switch (spaceSplit[2]) {
+						case "enable":
+							enableOpOverride = true;
+							event.respond("Op cooldown override is enabled.");
+							break;
+						case "disable":
+							enableOpOverride = false;
+							event.respond("Op cooldown override is disabled.");
+							break;
+						default:
+							event.respond("Unknown operation.");
+							break;
+
+						}
+					} else {
+						event.respond("Invalid arguments.");
 					}
 					break;
-				case "terminate":
-					disableManager(false, event.getUser().getNick());
+				case "aio":
+					event.respond("Operator status: " + (OperatorManager.isOperator(event.getUser().getNick()) ? Colors.GREEN + "Enabled" : Colors.RED + "Disabled"));
 					break;
-				case "karma":
-					if (spaceSplit[2].equalsIgnoreCase("reset")) {
-						karmaSystem(SystemEvent.RESET, message, event);
-					}
-					if (spaceSplit[2].equalsIgnoreCase("set")) {
-						karmaSystem(SystemEvent.SET, message, event);
-					}
-					break;
-				case "enable":
-					enaDisSystem(SystemEvent.ENABLE, message, event);
-					break;
-				case "disable":
-					enaDisSystem(SystemEvent.DISABLE, message, event);
-					break;
-				case "op":
-					if (spaceSplit[2].equalsIgnoreCase("add")) {
-						String nick = message.split("systems op add")[1].substring(1);
-						OperatorManager.addOperator(nick);
-						event.respond("User: " + nick + " has been " + Colors.GREEN + "added" + Colors.NORMAL + " to the operator list.");
-						bot.sendIRC().message(nick, "You are now op");
-					}
-					if (spaceSplit[2].equalsIgnoreCase("remove")) {
-						String nick = message.split("systems op add")[1].substring(1);
-						OperatorManager.removeOperator(nick);
-						event.respond("User: " + nick + " has been " + Colors.RED + "removed" + Colors.NORMAL + " to the operator list.");
-						bot.sendIRC().message(nick, "You are no longer op");
-					}
-					break;
-				case "mail":
-					event.respond(chatManager.mailProcessor(message, event.getUser().getNick()));
 				default:
 					break;
 				}
+				if (OperatorManager.isOperator(event.getUser().getNick())) {
+					switch (spaceSplit[1]) {
+					case "insult":
+						if (spaceSplit.length > 2) {
+							if (spaceSplit[2].equals("add")) {
+								String insult = message.split(startCharacter + "systems insult add")[1].substring(1);
+								insultStrings.add(insult);
+								event.respond("The insult '" + insult + "' has been added to the list. There are now " + insultStrings.size() + " insults.");
+							}
+							if (spaceSplit[2].equalsIgnoreCase("swear")) {
+								if (spaceSplit.length > 3) {
+									switch (spaceSplit[3]) {
+									case "enable":
+										useInsultSwears = true;
+										event.respond("Insult swears are enabled.");
+										break;
+									case "disable":
+										useInsultSwears = false;
+										event.respond("Insult swears are disabled.");
+										break;
+									default:
+										event.respond("Unknown operation.");
+										break;
+									}
+								} else {
+									event.respond("Invalid arguments.");
+								}
+							}
+						} else {
+							event.respond("Invalid arguments.");
+						}
+						break;
+					case "terminate":
+						disableManager(false, event.getUser().getNick());
+						break;
+					case "karma":
+						if (spaceSplit[2].equalsIgnoreCase("reset")) {
+							karmaSystem(SystemEvent.RESET, message, event);
+						}
+						if (spaceSplit[2].equalsIgnoreCase("set")) {
+							karmaSystem(SystemEvent.SET, message, event);
+						}
+						break;
+					case "enable":
+						enaDisSystem(SystemEvent.ENABLE, message, event);
+						break;
+					case "disable":
+						enaDisSystem(SystemEvent.DISABLE, message, event);
+						break;
+					case "op":
+						if (spaceSplit[2].equalsIgnoreCase("add")) {
+							String nick = message.split("systems op add")[1].substring(1);
+							OperatorManager.addOperator(nick);
+							event.respond("User: " + nick + " has been " + Colors.GREEN + "added" + Colors.NORMAL + " to the operator list.");
+							bot.sendIRC().message(nick, "You are now op");
+						}
+						if (spaceSplit[2].equalsIgnoreCase("remove")) {
+							String nick = message.split("systems op add")[1].substring(1);
+							OperatorManager.removeOperator(nick);
+							event.respond("User: " + nick + " has been " + Colors.RED + "removed" + Colors.NORMAL + " to the operator list.");
+							bot.sendIRC().message(nick, "You are no longer op");
+						}
+						break;
+					case "mail":
+						event.respond(chatManager.mailProcessor(message, event.getUser().getNick()));
+					default:
+						break;
+					}
+				}
+			} else {
+				chatManager.systemsProcessor(event.getUser());
 			}
 		}
 		super.onPrivateMessage(event);
@@ -516,7 +601,7 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 			return chatManager.karmaProcessor(false, event.getUser(), message);
 		}
 		if (message.toLowerCase().startsWith(startCharacter + "??")) {
-			return chatManager.karmaLookupProcessor(message);
+			return chatManager.karmaLookupProcessor(nick, message);
 		}
 		if (message.toLowerCase().startsWith(startCharacter + "in")) {
 			bot.sendIRC().message(channelString, chatManager.insultProcessor(nick, message));
@@ -571,6 +656,16 @@ public class StoreBot extends ListenerAdapter<PircBotX> {
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * This will send a raw message to the server
+	 * 
+	 * @param message
+	 *            - The raw message
+	 */
+	public void sendRaw(String message) {
+		bot.sendRaw().rawLineNow(message, true);
 	}
 
 }

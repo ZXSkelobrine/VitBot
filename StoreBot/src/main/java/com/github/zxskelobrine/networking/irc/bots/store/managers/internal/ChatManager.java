@@ -10,14 +10,14 @@ import org.pircbotx.PircBotX;
 import org.pircbotx.User;
 
 import com.github.zxskelobrine.networking.irc.bots.store.StoreBot;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.SlapUser;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.SystemsManager;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.karma.KarmaManager;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.karma.KarmaUser;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.mail.MailItem;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.mail.MailManager;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.riot.RiotControl;
-import com.github.zxskelobrine.networking.irc.bots.store.systems.slap.SlapManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.SystemsManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.karma.KarmaManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.karma.KarmaUser;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.mail.MailItem;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.mail.MailManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.riot.RiotManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.slap.SlapManager;
+import com.github.zxskelobrine.networking.irc.bots.store.systems.internal.slap.SlapUser;
 import com.github.zxskelobrine.networking.irc.bots.store.systems.cooldown.CooldownTimerTask.CooldownType;
 
 public class ChatManager {
@@ -26,39 +26,82 @@ public class ChatManager {
 	public String[] riotStrings = new String[] { "%NICK% waves their arms like a retarted cow", "%NICK% slaps %RANDNICK% with a %SIZE% trout" };
 	public String[] compliments = new String[] { "%TO%: You are cool!", "%TO% you are so human sized.", "%TO% I dislike you the least.", "%TO% on the list of people I want to kill, you are at the bottom.", "%TO%, You think of the funniest names for wi-fi networks.", "%TO% you're funny!", "%TO% - Your voice sounds like a thousand cats purring. (I may be on acid...)", "%TO% you're awesome for slaying the blue dragon.", "%TO% Your allergies are some of the least embarrassing allergies.", "%TO% You are better than everyone - even Gary", "%TO% You are freakishly good at thumb wars.", "%TO% I am going to name my goldfish after you!", "%TO% I want some of your hair!", "%TO% You are awesome becuase you are a kiwi.", "%TO% People behind you at movies think you are the perfect height.", "%TO%Sushi chefs are wowed by your chopstick dexterity." };
 	public Random random = new Random();
-	public RiotControl control;
+	public RiotManager control;
 	public List<User> users = new ArrayList<User>();
 	public Channel channel;
 	public PircBotX botX;
 	public StoreBot bot;
 
 	public ChatManager(Channel channel, PircBotX bot, StoreBot storeBot) {
-		control = new RiotControl();
+		control = new RiotManager();
 		this.botX = bot;
 		this.users = channel.getUsers().asList();
 		this.channel = channel;
 		this.bot = storeBot;
 	}
 
-	public String karmaLookupProcessor(String message) {
+	/**
+	 * This will look up the karma of the given user.
+	 * 
+	 * @param sender
+	 *            - The person who sent the command.
+	 * @param message
+	 *            - The message they sent
+	 * @return String - the string to say back.
+	 */
+	public String karmaLookupProcessor(String sender, String message) {
+		//If the karma system is enabled.
 		if (SystemsManager.isKarmaSystemEnabled()) {
-			String user = message.split("\\s+")[1];
-			if (KarmaManager.hasKarmaAccount(user)) {
-				return user + " has " + KarmaManager.getKarmaAmount(user) + " karma.";
+			//Split the message every space.
+			String[] spaces = message.split("\\s+");
+			//If there are two words ([SC]?? <User>)
+			if (spaces.length == 2) {
+				//Lookup the karma of the given user.
+				return lookupKarma(spaces[1]);
+				//Otherwise if there is only one word ([SC]??)
+			} else if (spaces.length == 1) {
+				//Lookup the karma of the sender;
+				return lookupKarma(sender);
+				//Otherwise
 			} else {
-				KarmaUser karmaUser = new KarmaUser(user, 0);
-				KarmaManager.addKarmaUser(karmaUser);
-				return user + " has " + KarmaManager.getKarmaAmount(user) + " karma.";
+				//Return an invalid message.
+				return "Invalid arguments.";
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * This will return the karma of the given user in a readable form.
+	 * 
+	 * @param user
+	 *            - The user to lookup.
+	 * @return String - the readable karma.
+	 */
+	private String lookupKarma(String user) {
+		if (KarmaManager.hasKarmaAccount(user)) {
+			return user + " has " + KarmaManager.getKarmaAmount(user) + " karma.";
+		} else {
+			KarmaUser karmaUser = new KarmaUser(user, 0);
+			KarmaManager.addKarmaUser(karmaUser);
+			return user + " has " + KarmaManager.getKarmaAmount(user) + " karma.";
+		}
 	}
 
 	public String insultProcessor(String sender, String message) {
 		if (SystemsManager.isInsultsSystemEnabled()) {
 			if (!CoolDownManager.cooldownTimerTask.hasCooldown(sender, CooldownType.INSULT)) {
 				String to = message.split("\\s+")[1];
-				String insult = StoreBot.insultStrings.get(random.nextInt(StoreBot.insultStrings.size())).replace("%TO%", to);
+				String insult;
+				if (bot.useInsultSwears) {
+					if (random.nextInt(2) == 0) {
+						insult = StoreBot.swearInsultStrings.get(random.nextInt(StoreBot.swearInsultStrings.size())).replace("%TO%", to);
+					} else {
+						insult = StoreBot.insultStrings.get(random.nextInt(StoreBot.insultStrings.size())).replace("%TO%", to);
+					}
+				} else {
+					insult = StoreBot.insultStrings.get(random.nextInt(StoreBot.insultStrings.size())).replace("%TO%", to);
+				}
 				CoolDownManager.cooldownTimerTask.activateCooldown(sender, CooldownType.INSULT);
 				return insult;
 			} else {

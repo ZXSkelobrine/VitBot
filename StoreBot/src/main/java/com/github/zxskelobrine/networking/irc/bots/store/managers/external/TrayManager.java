@@ -17,10 +17,17 @@ import com.github.zxskelobrine.networking.irc.bots.store.windows.StatusWindow;
 
 public class TrayManager {
 
-	private static String iconPath = "/icons/icon.png";
+	public static String iconPath = "/icons/icon.png";
 	private static TrayIcon trayIcon;
 	private static SystemTray tray;
 
+	/**
+	 * This method will enable the tray icon for the program.
+	 * 
+	 * @param window
+	 *            - The frame that is enabling the tray icon.
+	 * @throws IOException
+	 */
 	public static void initializeTray(final StatusWindow window) throws IOException {
 		if (SystemTray.isSupported()) {
 			tray = SystemTray.getSystemTray();

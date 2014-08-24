@@ -1,4 +1,4 @@
-package com.github.zxskelobrine.networking.irc.bots.store.systems;
+package com.github.zxskelobrine.networking.irc.bots.store.systems.internal;
 
 public class SystemsManager {
 

@@ -1,11 +1,9 @@
-package com.github.zxskelobrine.networking.irc.bots.store.systems.slap;
+package com.github.zxskelobrine.networking.irc.bots.store.systems.internal.slap;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import com.github.zxskelobrine.networking.irc.bots.store.systems.SlapUser;
 
 public class SlapManager {
 
